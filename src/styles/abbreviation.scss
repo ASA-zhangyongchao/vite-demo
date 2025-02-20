@@ -1,0 +1,141 @@
+// 省略号
+@for $i from 1 through 5 {
+  .z-line-#{$i} {
+    @if $i== "1" {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    } @else {
+      display: -webkit-box !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-all;
+      -webkit-line-clamp: $i;
+      -webkit-box-orient: vertical !important;
+    }
+  }
+}
+/*
+    ** 内外边距快速设置 **
+  
+    此段代码通过循环生成一系列CSS类，帮助快速设置元素的内外边距。
+    范围从0到80，仅包括偶数和能被5整除的数值，单位为px。
+    类命名规则：
+    `.z-margin-数字` 或 `.z-m-数字` 设置所有边的外边距
+    `.z-padding-数字` 或 `.z-p-数字` 设置所有边的内边距
+    方向特定类如 `.z-margin-left-数字` 或简写 `.z-m-l-数字` 分别设置左边的外边距和内边距
+  */
+
+@for $i from 0 through 80 {
+  // 定义通用内外边距类
+  .z-margin-#{$i},
+  .z-m-#{$i} {
+    margin: $i + px !important;
+  }
+
+  .z-padding-#{$i},
+  .z-p-#{$i} {
+    padding: $i + px !important;
+  }
+
+  // 为每个方向定义缩写和完整版内外边距类
+  @each $short, $long in l left, t top, r right, b bottom {
+    .z-m-#{$short}-#{$i} {
+      margin-#{$long}: $i + px !important;
+    }
+
+    .z-p-#{$short}-#{$i} {
+      padding-#{$long}: $i + px !important;
+    }
+
+    .z-margin-#{$long}-#{$i} {
+      margin-#{$long}: $i + px !important;
+    }
+
+    .z-padding-#{$long}-#{$i} {
+      padding-#{$long}: $i + px !important;
+    }
+  }
+}
+
+// flex
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+// align-items
+.items-start {
+  align-items: flex-start;
+}
+.items-center {
+  align-items: center;
+}
+.items-end {
+  align-items: flex-end;
+}
+.items-stretch {
+  align-items: stretch;
+}
+.items-baseline {
+  align-items: baseline;
+}
+// justify-content
+.justify-start {
+  justify-content: flex-start;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-end {
+  justify-content: flex-end;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.justify-around {
+  justify-content: space-around;
+}
+.justify-evenly {
+  justify-content: space-evenly;
+}
+// flex-wrap
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.flex-nowrap {
+  flex-wrap: nowrap;
+}
+.flex-wrap-reverse {
+  flex-wrap: wrap-reverse;
+}
+// flex
+@for $i from 0 through 5 {
+  .flex-#{$i} {
+    flex: $i;
+  }
+}
+// width / height
+@for $i from 0 through 100 {
+  .z-width-#{$i} {
+    width: $i + px !important;
+  }
+  .z-height-#{$i} {
+    height: $i + px !important;
+  }
+  .z-width-per-#{$i} {
+    width: 1% * $i !important;
+  }
+  .z-height-per-#{$i} {
+    height: 1% * $i !important;
+  }
+  .z-width-vw-#{$i} {
+    width: $i + vw !important;
+  }
+  .z-height-vh-#{$i} {
+    height: $i + vh !important;
+  }
+}
