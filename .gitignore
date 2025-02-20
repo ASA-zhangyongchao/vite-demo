@@ -27,3 +27,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+.env.*
+*.key
+secret-config/

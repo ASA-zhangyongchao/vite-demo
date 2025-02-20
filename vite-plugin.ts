@@ -20,33 +20,39 @@ export default function encryptPlugin(options: EncryptPluginOptions): Plugin {
     ...defaultMarkers,
     ...options
   }
-
+  let actualKey: string
   return {
     name: 'vite-plugin-partial-encrypt',
-
+    configResolved(config) {
+      // 构建时验证密钥存在性
+      if (!process.env.VITE_ENCRYPT_KEY) {
+        throw new Error('VITE_ENCRYPT_KEY must be set in environment')
+      }
+      actualKey = process.env.VITE_ENCRYPT_KEY
+    },
     // 转换文件内容
     transform(code, id) {
-      // 只处理 .ts 和 .js 文件
-      if (!/\.(js|ts)$/.test(id)) return
-
-      // 正则匹配加密区块
       const regex = new RegExp(`${markers.markerStart}([\\s\\S]*?)${markers.markerEnd}`, 'g')
 
-      let transformedCode = code
-      let hasReplaced = false
+      return code.replace(regex, (match, p1) => {
+        const rawData = p1.trim()
 
-      transformedCode = transformedCode.replace(regex, (match, p1) => {
-        hasReplaced = true
+        // 生成校验哈希
+        const checksum = CryptoJS.SHA256(rawData + secretKey).toString()
 
-        // AES 加密内容
-        const encrypted = CryptoJS.AES.encrypt(p1.trim(), secretKey).toString()
+        // 构建带校验的加密对象
+        const payload = {
+          data: rawData,
+          checksum: checksum,
+          timestamp: Date.now()
+        }
 
-        // 返回替换后的内容（保留标记结构）
-        return `${markers.markerStart}\n'${encrypted}'${markers.markerEnd}`
+        // 加密完整数据
+        const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), secretKey).toString()
+
+        // 返回安全格式
+        return `${markers.markerStart}\n${JSON.stringify(encrypted)}${markers.markerEnd}`
       })
-
-      // 返回修改后的代码（仅在发生替换时）
-      return hasReplaced ? { code: transformedCode } : null
     }
   }
 }

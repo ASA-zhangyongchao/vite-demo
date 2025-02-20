@@ -2,7 +2,7 @@
  * @Author: 张永超 162996163+ASA-zhangyongchao@users.noreply.github.com
  * @Date: 2025-02-19 03:15:13
  * @LastEditors: 张永超 162996163+ASA-zhangyongchao@users.noreply.github.com
- * @LastEditTime: 2025-02-20 02:32:40
+ * @LastEditTime: 2025-02-20 05:22:27
  * @FilePath: /vite-demo/src/App.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -14,16 +14,52 @@ import CryptoJS from 'crypto-js'
 import sensitiveConfig from '@/data/index'
 
 onMounted(async () => {
+  console.log(import.meta.env.VITE_ENCRYPT_KEY, "VITE_ENCRYPT_KEY")
+  console.log(sensitiveConfig, "---sensitiveConfig")
   // 处理加密数据
-  const realData = decrypt(sensitiveConfig.toString())
-  console.log('--realData', realData)
+  // const encryptedString = sensitiveConfig.toString().match(/\/\/ @encrypt\n(.*?)\n\/\/ @end/s)?.[1];
+  // if (!encryptedString) throw new Error('找不到加密数据');
+  if (process.env.NODE_ENV !== 'production') return
+  const rawData = decrypt(sensitiveConfig)
+  console.log(rawData, "--rawData")
 })
-
-// 解密函数
-const decrypt = (encrypted: string) => {
-  const bytes = CryptoJS.AES.decrypt(encrypted, import.meta.env.VITE_ENCRYPT_KEY)
-  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8))
+// 在加密前混淆数据
+function obfuscate(data: string) {
+  return data.split('').reverse().join('');
 }
+const decrypt = (encryptedStr: any) => {
+  try {
+    // 解密流程
+    console.log(obfuscate(encryptedStr), "--encryptedStr1")
+    console.log(encryptedStr, "--encryptedStr2")
+    const bytes = CryptoJS.AES.decrypt(encryptedStr, import.meta.env.VITE_ENCRYPT_KEY);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    
+    if (!decrypted) {
+      throw new Error('解密失败：空内容或密钥错误');
+    }
+
+    // 解析校验数据
+    const { data, checksum, timestamp } = JSON.parse(decrypted);
+    
+    // 时效检查（示例：有效期7天）
+    const now = Date.now();
+    if (now - timestamp > 604800000) {
+      throw new Error('数据已过期');
+    }
+
+    // 完整性校验
+    const currentChecksum = CryptoJS.SHA256(data + import.meta.env.VITE_ENCRYPT_KEY).toString();
+    if (currentChecksum !== checksum) {
+      throw new Error(`数据校验失败！服务端:${checksum} 客户端:${currentChecksum}`);
+    }
+
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('[安全错误]', e);
+    return null;
+  }
+};
 </script>
 
 <template>
